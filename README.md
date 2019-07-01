@@ -2,7 +2,7 @@
 
 This challenge should take approximately 8 - 12 hours of time and should demonstrate how you would 
 approach architecting a web application. You may use the framework or library of your choice but you should not adopt any
-additional libraries for specific functionality as we would like to see how you organize your application components. 
+additional libraries for specific functionality as we would like to see how you organize your application components. Utility libraries like moment, axios, lodash etc are fine this is more speaking to component solutions that would handle rendering more complex components like tables, modals or sliders.
 To begin you should clone this repo then when ready to submit your work open a pull request on github outlining your 
 decisions and outcomes. 
 
@@ -24,4 +24,6 @@ decisions and outcomes.
 ### Comp
 ![Admin roles interface](take-home-challenge-comp.png)
 
-### Endpoint
+### Endpoints
+https://code-challenge-api.github59.now.sh/api/roles.json
+https://code-challenge-api.github59.now.sh/api/permissions.json
