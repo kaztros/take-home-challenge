@@ -25,5 +25,7 @@ decisions and outcomes.
 ![Admin roles interface](take-home-challenge-comp.png)
 
 ### Endpoints
+
 https://code-challenge-api.github59.now.sh/api/roles.json
+
 https://code-challenge-api.github59.now.sh/api/permissions.json
