@@ -8,10 +8,10 @@ decisions and outcomes.
 
 ## Goals
 
-- Build the layout as depicted in the attached screenshot ( pixel perfection is not expected )
-- All needed data should be consumed from the linked endpoint
-- The application should support loading the existing role and permission data and rendering it preferably with Promises or Async Await
-- The application should demonstrate the ability to add a new role with permissions an render it into the table of loaded records
+- Build the layout as depicted in the attached screenshot ( pixel perfection is not expected and some sections of the design have been commented out for simplicity ).
+- All needed data should be consumed from the linked endpoints
+- The application should support loading the existing role and permission data preferably with Promises or Async Await and rendering it 
+- The application should demonstrate the ability to add a new role with permissions and render it into the table of loaded records ( the data updates on the client are not expected to persist on refresh )
 
 ## Bonus Goals
 
