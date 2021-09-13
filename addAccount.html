@@ -1,0 +1,97 @@
+
+<html>
+<header></header>
+<body>
+	<div id="createRole">
+		<h3>Create new role</h3>
+		<p>As an admin, you can create new roles with specific permissions to assign to new and existing users.</p>
+		<p>
+			<label for="roleNameInput">Role Name</label>
+			<input type="text" id="roleNameInput" name="roleNameInput" placeholder="...">
+		</p>
+		<form>
+			<div id="rolePermissionsInput">
+			</div>
+		</form>
+	</div>
+</body>
+<script>
+	'use strict';
+	function get_url() {
+
+	}
+	function retrieveAllPermissions(onload, onerror) {
+		let xhttp = new XMLHttpRequest()
+		xhttp.onload = onload
+		xhttp.onerror = onerror
+		xhttp.open("GET", "/all_permissions.json", true)
+		xhttp.send()
+	}
+
+	function removeAllChildNodes(parent) {
+	    while (parent.firstChild) {
+	        parent.removeChild(parent.firstChild);
+	    }
+	}
+
+	function populatePermissionCheckboxesInit() {
+		let domCheckboxes = document.getElementById("rolePermissionsInput")
+		let excuses = document.createTextNode("Loading...")
+
+		removeAllChildNodes(domCheckboxes)
+		domCheckboxes.appendChild(excuses)
+	}
+
+	function populatePermissionCheckboxesError() {
+		let domCheckboxes = document.getElementById("rolePermissionsInput")
+		let excuses = document.createTextNode("aw beans.  Something bad happened.")
+
+		removeAllChildNodes(domCheckboxes)
+		domCheckboxes.appendChild(excuses)
+	}
+
+
+	function populatePermissionCheckboxesSuccess(all_permissions) {
+		let domCheckboxes = document.getElementById("rolePermissionsInput")
+
+		removeAllChildNodes(domCheckboxes)
+
+		for(let permission of all_permissions) {
+			let checkbox = document.createElement("input")
+			let label = document.createElement("label")
+			let description = document.createTextNode(permission)
+
+			checkbox.type = "checkbox"
+			checkbox.id = "checkbox_" + permission
+			checkbox.name = "permission_" + permission
+			checkbox.value = "value_" + permission
+
+			label.htmlFor = "checkbox_" + permission
+			label.appendChild(description)
+
+			domCheckboxes.appendChild(checkbox)
+			domCheckboxes.appendChild(label)
+			domCheckboxes.appendChild(document.createElement("br"))
+		}
+	}
+
+	function thisShim() {
+		try {
+			console.log(this.responseText)
+			populatePermissionCheckboxesSuccess(JSON.parse(this.responseText)) 
+		} catch (err) {
+			console.log(err)
+			populatePermissionCheckboxesError()
+		}
+	}
+
+	populatePermissionCheckboxesInit()
+	retrieveAllPermissions
+		( thisShim
+		, populatePermissionCheckboxesError
+		)
+
+
+</script>
+<footer></footer>
+</html>
