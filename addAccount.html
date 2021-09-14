@@ -142,9 +142,8 @@
 	}
 
 	function changePermissionIdsIntoPermissionNames(idNumber, permissions) {
-		let permissions_index = permissions.find(y => y.id == idNumber)
-		let role_name = permissions[permissions_index]?.name
-		return role_name
+		let permission = permissions.find(y => y.id == idNumber)
+		return permission?.name
 	}
 
 	function htmlRoleNameFromRole(role, permissions) {
@@ -156,6 +155,7 @@
 	}
 
 	function htmlRolePermissionsFromRole(role, permissions) {
+		console.log(permissions)
 		let names = role.permission_ids.map(x => changePermissionIdsIntoPermissionNames(x, permissions) ?? `(invalid role_id ${x})`)
 		names = names?.length ? names : ["(none)"]
 
