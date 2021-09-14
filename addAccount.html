@@ -92,7 +92,6 @@
 
 	function parseAllPermissionsForCheckboxes() {
 		try {
-			console.log(this.responseText)
 			let permissions = JSON.parse(this.responseText).data
 			repopulateDomCheckboxesWithRoles(permissions)
 			
@@ -135,12 +134,6 @@
 		}
 	}
 
-	function htmlTableDatafy(element) {
-		let td = document.createElement("td")
-		td.appendChild(element)
-		return td
-	}
-
 	function changePermissionIdsIntoPermissionNames(idNumber, permissions) {
 		let permission = permissions.find(y => y.id == idNumber)
 		return permission?.name
@@ -155,7 +148,6 @@
 	}
 
 	function htmlRolePermissionsFromRole(role, permissions) {
-		console.log(permissions)
 		let names = role.permission_ids.map(x => changePermissionIdsIntoPermissionNames(x, permissions) ?? `(invalid role_id ${x})`)
 		names = names?.length ? names : ["(none)"]
 
@@ -189,7 +181,7 @@
 		let headerRow = htmlTable.createTHead().insertRow(0)
 		let headerRowElements = htmlTableHeaderElements()
 
-		headerRowElements.forEach( function (ele, idx) {
+		headerRowElements.forEach( function (ele) {
 			let th = document.createElement("th")
 			th.appendChild(ele)
 			headerRow.appendChild(th)
@@ -211,7 +203,7 @@
 	//Start doing actual things: 
 	repopulateDomCheckboxesLoading()
 	retrieveAllPermissions
-		( "/all_permissions.json"
+		( "/permissions.json"
 		, parseAllPermissionsForCheckboxes	//TODO:  Why can't I bind "this" here?
 		, repopulateDomCheckboxesError
 		)
