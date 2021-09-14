@@ -72,9 +72,9 @@ function main_ish() {
 }
 
 function adminServerDemux(req, res) {
-	if (req.url == "/all_permissions.json") {
+	if (req.url == "/permissions.json") {
 		serveAsJSON(res, PERMISSIONS)
-	} else if (req.url == "/all_roles.json") {
+	} else if (req.url == "/roles.json") {
 		serveAsJSON(res, ROLES)
 	} else if (req.url == "/addAccount.html") {
 		serveAddAccountPage(res)
