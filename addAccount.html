@@ -190,8 +190,9 @@
 		let headerRowElements = htmlTableHeaderElements()
 
 		headerRowElements.forEach( function (ele, idx) {
-			let cell = headerRow.insertCell(idx)
-			cell.appendChild(ele)
+			let th = document.createElement("th")
+			th.appendChild(ele)
+			headerRow.appendChild(th)
 		})
 
 		let tableBody = htmlTable.createTBody()
@@ -200,7 +201,6 @@
 			let row = tableBody.insertRow(row_idx)
 			eles.forEach( function (ele, ele_idx) {
 				let cell = row.insertCell(ele_idx)
-				console.log(ele)
 				cell.appendChild(ele)
 			})
 		})
