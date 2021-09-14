@@ -15,16 +15,27 @@
 		</form>
 	</div>
 	<div id="existingRoles">
+		<table>
+			<tr>
+				<th>Role</th>
+				<th>Users</th>
+				<th>Permissions</th>
+			</tr>
+			<tr>
+				<td>(loading...)</td>
+				<td>(loading...)</td>
+				<td>(loading...)</td>
+		</table>
 	</div>
 </body>
 <script>
 	'use strict';
 
-	function retrieveAllPermissions(onload, onerror) {
+	function retrieveAllPermissions(path, onload, onerror) {
 		let xhttp = new XMLHttpRequest()
 		xhttp.onload = onload
 		xhttp.onerror = onerror
-		xhttp.open("GET", "/all_permissions.json", true)
+		xhttp.open("GET", path, true)
 		xhttp.send()
 	}
 
@@ -34,7 +45,7 @@
 	    }
 	}
 
-	function populatePermissionCheckboxesInit() {
+	function repopulateDomCheckboxesLoading() {
 		let domCheckboxes = document.getElementById("rolePermissionsInput")
 		let excuses = document.createTextNode("Loading...")
 
@@ -42,7 +53,7 @@
 		domCheckboxes.appendChild(excuses)
 	}
 
-	function populatePermissionCheckboxesError() {
+	function repopulateDomCheckboxesError() {
 		let domCheckboxes = document.getElementById("rolePermissionsInput")
 		let excuses = document.createTextNode("aw beans.  Something bad happened.")
 
@@ -50,28 +61,31 @@
 		domCheckboxes.appendChild(excuses)
 	}
 
+	function createCheckboxHtmlElementsFromRoleName(name) {
+		//Not whitespace friendly.
+		let checkbox = document.createElement("input")
+		let label = document.createElement("label")
+		let description = document.createTextNode(name)
 
-	function populatePermissionCheckboxesSuccess(all_roles) {
+		checkbox.type = "checkbox"
+		checkbox.id = "checkbox_" + name
+		checkbox.name = "permission_" + name
+		checkbox.value = "value_" + name
+
+		label.htmlFor = "checkbox_" + name
+		label.appendChild(description)
+
+		return [checkbox, label]
+	}
+
+	function repopulateDomCheckboxesWithRoles(all_roles) {
 		let domCheckboxes = document.getElementById("rolePermissionsInput")
 
 		removeAllChildNodes(domCheckboxes)
 
 		for(let role of all_roles) {
-			let name = role.name
-			let checkbox = document.createElement("input")
-			let label = document.createElement("label")
-			let description = document.createTextNode(name)
-
-			checkbox.type = "checkbox"
-			checkbox.id = "checkbox_" + name
-			checkbox.name = "permission_" + name
-			checkbox.value = "value_" + name
-
-			label.htmlFor = "checkbox_" + name
-			label.appendChild(description)
-
-			domCheckboxes.appendChild(checkbox)
-			domCheckboxes.appendChild(label)
+			let htmlElements = createCheckboxHtmlElementsFromRoleName(role.name)
+			htmlElements.forEach(x => domCheckboxes.appendChild(x))
 			domCheckboxes.appendChild(document.createElement("br"))
 		}
 	}
@@ -79,18 +93,127 @@
 	function parseAllPermissionsForCheckboxes() {
 		try {
 			console.log(this.responseText)
-			populatePermissionCheckboxesSuccess(JSON.parse(this.responseText).data) 
+			let permissions = JSON.parse(this.responseText).data
+			repopulateDomCheckboxesWithRoles(permissions)
+			
+			let dummyRoles = {
+			  data: [
+			    {
+			      id: 1,
+			      name: "All Powerful",
+			      assigned_user_count: 3,
+			      permission_ids: [ 1, 2, 3, 4, 5, 6 ]
+			    },
+			    {
+			      id: 2,
+			      name: "Ghost",
+			      assigned_user_count: 42,
+			      permission_ids: [ 2, 3, 4, 5 ]
+			    },
+			    {
+			      id: 3,
+			      name: "Ed",
+			      assigned_user_count: 1,
+			      permission_ids: [ ]
+			    },
+			    {
+			      id: 4,
+			      name: "Duck",
+			      assigned_user_count: 10,
+			      permission_ids: [ 6 ]
+			    }
+			  ],
+			  meta: { }
+			}
+
+			let divTable = document.getElementById("existingRoles")
+			removeAllChildNodes(divTable)
+			divTable.appendChild(htmlTableFromRoles(dummyRoles.data, permissions))
 		} catch (err) {
 			console.log(err)
-			populatePermissionCheckboxesError()
+			repopulateDomCheckboxesError()
 		}
 	}
 
+	function htmlTableDatafy(element) {
+		let td = document.createElement("td")
+		td.appendChild(element)
+		return td
+	}
+
+	function changePermissionIdsIntoPermissionNames(idNumber, permissions) {
+		let permissions_index = permissions.find(y => y.id == idNumber)
+		let role_name = permissions[permissions_index]?.name
+		return role_name
+	}
+
+	function htmlRoleNameFromRole(role, permissions) {
+		return document.createTextNode(role?.name ?? "(none)")
+	}
+
+	function htmlRoleUsageFromRole(role, permissions) {
+		return document.createTextNode("" + (role?.assigned_user_count ?? 0))
+	}
+
+	function htmlRolePermissionsFromRole(role, permissions) {
+		let names = role.permission_ids.map(x => changePermissionIdsIntoPermissionNames(x, permissions) ?? `(invalid role_id ${x})`)
+		names = names?.length ? names : ["(none)"]
+
+		let htmlRoleNames = document.createTextNode(names.join("; "))
+		return htmlRoleNames
+	}
+
+	const TABLE_PARAMETERS =
+		[	{	name : "Role",
+				htmlFromRole : htmlRoleNameFromRole
+			}
+		,	{	name : "Users",
+				htmlFromRole : htmlRoleUsageFromRole
+			}
+		,	{	name : "Permissions",
+				htmlFromRole : htmlRolePermissionsFromRole 
+			}
+		]
+
+	function htmlTableRowElementsFromRole(role, permissions) {
+		return TABLE_PARAMETERS.map(x => x.htmlFromRole(role, permissions))
+	}
+
+	function htmlTableHeaderElements() {
+		return TABLE_PARAMETERS.map(x => document.createTextNode(x.name))
+	}
+
+	function htmlTableFromRoles(roles, permissions) {
+		let htmlTable = document.createElement("table")
+
+		let headerRow = htmlTable.createTHead().insertRow(0)
+		let headerRowElements = htmlTableHeaderElements()
+
+		headerRowElements.forEach( function (ele, idx) {
+			let th = document.createElement("th")
+			th.appendChild(ele)
+			headerRow.appendChild(th)
+		})
+
+		let tableBody = htmlTable.createTBody()
+		let rowsElements = roles.map(role => htmlTableRowElementsFromRole(role, permissions))
+		rowsElements.forEach( function(eles, row_idx) {
+			let row = tableBody.insertRow(row_idx)
+			eles.forEach( function (ele, ele_idx) {
+				let cell = row.insertCell(ele_idx)
+				cell.appendChild(ele)
+			})
+		})
+
+		return htmlTable
+	}
+
 	//Start doing actual things: 
-	populatePermissionCheckboxesInit()
+	repopulateDomCheckboxesLoading()
 	retrieveAllPermissions
-		( parseAllPermissionsForCheckboxes	//TODO:  Why can't I bind "this" here?
-		, populatePermissionCheckboxesError
+		( "/all_permissions.json"
+		, parseAllPermissionsForCheckboxes	//TODO:  Why can't I bind "this" here?
+		, repopulateDomCheckboxesError
 		)
 
 
