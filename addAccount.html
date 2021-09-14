@@ -14,12 +14,12 @@
 			</div>
 		</form>
 	</div>
+	<div id="existingRoles">
+	</div>
 </body>
 <script>
 	'use strict';
-	function get_url() {
 
-	}
 	function retrieveAllPermissions(onload, onerror) {
 		let xhttp = new XMLHttpRequest()
 		xhttp.onload = onload
@@ -51,22 +51,23 @@
 	}
 
 
-	function populatePermissionCheckboxesSuccess(all_permissions) {
+	function populatePermissionCheckboxesSuccess(all_roles) {
 		let domCheckboxes = document.getElementById("rolePermissionsInput")
 
 		removeAllChildNodes(domCheckboxes)
 
-		for(let permission of all_permissions) {
+		for(let role of all_roles) {
+			let name = role.name
 			let checkbox = document.createElement("input")
 			let label = document.createElement("label")
-			let description = document.createTextNode(permission)
+			let description = document.createTextNode(name)
 
 			checkbox.type = "checkbox"
-			checkbox.id = "checkbox_" + permission
-			checkbox.name = "permission_" + permission
-			checkbox.value = "value_" + permission
+			checkbox.id = "checkbox_" + name
+			checkbox.name = "permission_" + name
+			checkbox.value = "value_" + name
 
-			label.htmlFor = "checkbox_" + permission
+			label.htmlFor = "checkbox_" + name
 			label.appendChild(description)
 
 			domCheckboxes.appendChild(checkbox)
@@ -75,21 +76,27 @@
 		}
 	}
 
-	function thisShim() {
+	function parseAllPermissionsForCheckboxes() {
 		try {
 			console.log(this.responseText)
-			populatePermissionCheckboxesSuccess(JSON.parse(this.responseText)) 
+			populatePermissionCheckboxesSuccess(JSON.parse(this.responseText).data) 
 		} catch (err) {
 			console.log(err)
 			populatePermissionCheckboxesError()
 		}
 	}
 
+	//Start doing actual things: 
 	populatePermissionCheckboxesInit()
 	retrieveAllPermissions
-		( thisShim
+		( parseAllPermissionsForCheckboxes	//TODO:  Why can't I bind "this" here?
 		, populatePermissionCheckboxesError
 		)
+
+
+
+
+
 
 
 </script>
