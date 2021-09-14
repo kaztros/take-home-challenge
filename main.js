@@ -2,15 +2,66 @@
 
 const fs = require("fs")
 
-function GET_ALL_PERMISSIONS() {
-	const all_permissions = ["add", "assign", "create", "edit", "read", "remove", "transfer", "upload", "write"]
-	let all_permissions_as_set = new Set()
-	for(let permission of all_permissions) {
-		all_permissions_as_set.add(permission)
-	}
-	//Set() cannot be JSON.stringify'd right now.  Fallback on to the array.
-	return all_permissions
+const PERMISSIONS = {
+  data: [
+    {
+      id: 1,
+      name: "View"
+    },
+    {
+      id: 2,
+      name: "Create"
+    },
+    {
+      id: 3,
+      name: "Edit"
+    },
+    {
+      id: 4,
+      name: "Destroy"
+    },
+    {
+      id: 5,
+      name: "Transfer"
+    },
+    {
+      id: 6,
+      name: "Quack"
+    }
+  ],
+  meta: {}
 }
+
+var ROLES = {
+  data: [
+    {
+      id: 1,
+      name: "All Powerful",
+      assigned_user_count: 3,
+      permission_ids: [ 1, 2, 3, 4, 5, 6 ]
+    },
+    {
+      id: 2,
+      name: "Ghost",
+      assigned_user_count: 42,
+      permission_ids: [ 2, 3, 4, 5 ]
+    },
+    {
+      id: 3,
+      name: "Ed",
+      assigned_user_count: 1,
+      permission_ids: [ ]
+    },
+    {
+      id: 4,
+      name: "Duck",
+      assigned_user_count: 10,
+      permission_ids: [ 6 ]
+    }
+  ],
+  meta: { }
+}
+
 
 function main_ish() {
 	const http = require('http')
@@ -22,7 +73,9 @@ function main_ish() {
 
 function adminServerDemux(req, res) {
 	if (req.url == "/all_permissions.json") {
-		serveAllPermissions(res)
+		serveAsJSON(res, PERMISSIONS)
+	} else if (req.url == "/all_roles.json") {
+		serveAsJSON(res, ROLES)
 	} else if (req.url == "/addAccount.html") {
 		serveAddAccountPage(res)
 	} else {
@@ -40,10 +93,10 @@ function buildPageNotFound(req, res) {
 		)
 }
 
-function serveAllPermissions(res) {
+function serveAsJSON(res, jsonable) {
 	res.statusCode = 200
 	res.setHeader("Content-Type", "application/json")
-	res.end(JSON.stringify(GET_ALL_PERMISSIONS()))
+	res.end(JSON.stringify(jsonable))
 }
 
 function serveAddAccountPage(res) {
