@@ -78,6 +78,8 @@ function adminServerDemux(req, res) {
 		serveAsJSON(res, ROLES)
 	} else if (req.url == "/htmlTableFromRoles.js") {
 		serveJavaScript(res, "htmlTableFromRoles.js")
+	} else if (req.url == "/htmlFormFromRoles.js") {
+		serveJavaScript(res, "htmlFormFromRoles.js")
 	} else if (req.url == "/addAccount.html") {
 		serveAddAccountPage(res)
 	} else {
