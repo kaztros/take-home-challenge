@@ -38,20 +38,23 @@
 	    }
 	}
 
-	function repopulateDomCheckboxesLoading() {
+	function repopulateFormCheckboxesWith(domNodes) {
 		let domCheckboxes = document.getElementById("rolePermissionsInput")
 		let excuses = document.createTextNode("Loading...")
 
 		removeAllChildNodes(domCheckboxes)
-		domCheckboxes.appendChild(excuses)
+		domNodes.forEach(x => domCheckboxes.appendChild(x))
 	}
 
-	function repopulateDomCheckboxesError() {
-		let domCheckboxes = document.getElementById("rolePermissionsInput")
-		let excuses = document.createTextNode("aw beans.  Something bad happened.")
+	function repopulateDomCheckboxesLoading() {
+		let loadingElements = [document.createTextNode("Loading...")]
+		repopulateFormCheckboxesWith(loadingElements)
+	}
 
-		removeAllChildNodes(domCheckboxes)
-		domCheckboxes.appendChild(excuses)
+	function repopulateDomCheckboxesError(errorString) {
+		errorString = errorString ?? "aw beans.  Something bad happened."
+		let errorElements = [document.createTextNode(errorString)]
+		repopulateFormCheckboxesWith(errorElements)
 	}
 
 	function createCheckboxHtmlElementsFromRoleName(name) {
@@ -72,15 +75,13 @@
 	}
 
 	function repopulateDomCheckboxesWithRoles(all_roles) {
-		let domCheckboxes = document.getElementById("rolePermissionsInput")
+		let arrayOfElements = all_roles.map(function(role) { 
+			let elements = createCheckboxHtmlElementsFromRoleName(role.name) 
+			elements = elements.concat([document.createElement("br")])
+			return elements
+		})
 
-		removeAllChildNodes(domCheckboxes)
-
-		for(let role of all_roles) {
-			let htmlElements = createCheckboxHtmlElementsFromRoleName(role.name)
-			htmlElements.forEach(x => domCheckboxes.appendChild(x))
-			domCheckboxes.appendChild(document.createElement("br"))
-		}
+		repopulateFormCheckboxesWith(arrayOfElements.flat())
 	}
 
 	function changePermissionIdsIntoPermissionNames(idNumber, permissions) {
@@ -88,31 +89,31 @@
 		return permission?.name
 	}
 
+	function refreshPermissionsAndRoles() {
+		let permissionsPromise = fetch("/permissions.json")
+		.then( response => response.json() )
+		.catch( err => repopulateDomCheckboxesError("aw beans: " + err.toString()) )
 
-	repopulateDomCheckboxesLoading()
+		let rolesPromise = fetch("/roles.json")
+		.then( response => response.json() )
+		.catch( err => console.log(err) )
+
+		let populateInputOnPromise = Promise.allSettled([permissionsPromise])
+		.then( results => repopulateDomCheckboxesWithRoles(results[0].value.data) )
+		.catch( err => repopulateDomCheckboxesError("aw beans: " + err.toString()) )
+
+		let populateTableOnPromise = Promise.allSettled([rolesPromise, permissionsPromise])
+		.then(function(results) {
+			let divTable = document.getElementById("existingRoles")
+			removeAllChildNodes(divTable)
+			divTable.appendChild(htmlTableFromRoles(results[0].value.data, results[1].value.data))
+		})
+		.catch( errors => console.log(errors) )
+	}
 
 	//Start doing actual things:
-	let permissionsPromise = fetch("/permissions.json")
-	.then( response => response.json() )
-	.catch( err => console.log(err) )
-
-	let rolesPromise = fetch("/roles.json")
-	.then( response => response.json() )
-	.catch( err => console.log(err) )
-
-	let populateInputOnPromise = Promise.allSettled([permissionsPromise])
-	.then( results => repopulateDomCheckboxesWithRoles(results[0].value.data) )
-	.catch( errors => repopulateDomCheckboxesError() )
-
-	let populateTableOnPromise = Promise.allSettled([rolesPromise, permissionsPromise])
-	.then(function(results) {
-		let divTable = document.getElementById("existingRoles")
-		removeAllChildNodes(divTable)
-		divTable.appendChild(htmlTableFromRoles(results[0].value.data, results[1].value.data))
-	})
-	.catch( errors => console.log(errors) )
-
-
+	repopulateDomCheckboxesLoading()
+	refreshPermissionsAndRoles()
 
 </script>
 <footer></footer>
