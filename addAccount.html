@@ -55,11 +55,12 @@
 		.catch( err => console.log(err) )
 
 		let populateInputOnPromise = Promise.allSettled([permissionsPromise])
-		.then( results => repopulateFormCheckboxesWith(htmlsFormFromPermissions(results[0].value.data)) )
-		.catch( err => repopulateFormCheckboxesWith(htmlsFormFromError("aw beans: " + err.toString())) )
+		.then( results => htmlsFormFromPermissions(results[0].value.data) )
+		.catch( err => htmlsFormFromError("aw beans: " + err.toString()) )
+		.then( htmls => repopulateFormCheckboxesWith(htmls) )
 
 		let populateTableOnPromise = Promise.allSettled([rolesPromise, permissionsPromise])
-		.then(function(results) {
+		.then(function([results]) {
 			repopulateRolesTableWith([htmlTableFromRoles(results[0].value.data, results[1].value.data)])
 		})
 		.catch( errors => console.log(errors) )
