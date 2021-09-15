@@ -62,4 +62,20 @@
 		return htmlTable
 	}
 
+	function htmlTableForLoading() {
+		let htmlTable = document.createElement("table")
+
+		let headerRow = htmlTable.createTHead().insertRow(0)
+		let headerRowElements = htmlTableHeaderElements()
+
+		let footerRow = htmlTable.createTFoot().insertRow(0)
+		let eles = TABLE_PARAMETERS.map(x => document.createTextNode("(loading...)"))
+		eles.forEach( function (ele, ele_idx) {
+			let cell = footerRow.insertCell(ele_idx)
+			cell.appendChild(ele)
+		})
+
+		return htmlTable
+	}
+
 

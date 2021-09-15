@@ -15,17 +15,6 @@
 		</form>
 	</div>
 	<div id="existingRoles">
-		<table>
-			<tr>
-				<th>Role</th>
-				<th>Users</th>
-				<th>Permissions</th>
-			</tr>
-			<tr>
-				<td>(loading...)</td>
-				<td>(loading...)</td>
-				<td>(loading...)</td>
-		</table>
 	</div>
 </body>
 <script type="text/javascript" src="htmlTableFromRoles.js"></script>
@@ -40,48 +29,14 @@
 
 	function repopulateFormCheckboxesWith(domNodes) {
 		let domCheckboxes = document.getElementById("rolePermissionsInput")
-		let excuses = document.createTextNode("Loading...")
-
 		removeAllChildNodes(domCheckboxes)
 		domNodes.forEach(x => domCheckboxes.appendChild(x))
 	}
 
-	function repopulateDomCheckboxesLoading() {
-		let loadingElements = [document.createTextNode("Loading...")]
-		repopulateFormCheckboxesWith(loadingElements)
-	}
-
-	function repopulateDomCheckboxesError(errorString) {
-		errorString = errorString ?? "aw beans.  Something bad happened."
-		let errorElements = [document.createTextNode(errorString)]
-		repopulateFormCheckboxesWith(errorElements)
-	}
-
-	function createCheckboxHtmlElementsFromRoleName(name) {
-		//Not whitespace friendly.
-		let checkbox = document.createElement("input")
-		let label = document.createElement("label")
-		let description = document.createTextNode(name)
-
-		checkbox.type = "checkbox"
-		checkbox.id = "checkbox_" + name
-		checkbox.name = "permission_" + name
-		checkbox.value = "value_" + name
-
-		label.htmlFor = "checkbox_" + name
-		label.appendChild(description)
-
-		return [checkbox, label]
-	}
-
-	function repopulateDomCheckboxesWithRoles(all_roles) {
-		let arrayOfElements = all_roles.map(function(role) { 
-			let elements = createCheckboxHtmlElementsFromRoleName(role.name) 
-			elements = elements.concat([document.createElement("br")])
-			return elements
-		})
-
-		repopulateFormCheckboxesWith(arrayOfElements.flat())
+	function repopulateRolesTableWith(domNodes) {
+		let divTable = document.getElementById("existingRoles")
+		removeAllChildNodes(divTable)
+		domNodes.forEach(x => divTable.appendChild(x))
 	}
 
 	function changePermissionIdsIntoPermissionNames(idNumber, permissions) {
@@ -104,15 +59,14 @@
 
 		let populateTableOnPromise = Promise.allSettled([rolesPromise, permissionsPromise])
 		.then(function(results) {
-			let divTable = document.getElementById("existingRoles")
-			removeAllChildNodes(divTable)
-			divTable.appendChild(htmlTableFromRoles(results[0].value.data, results[1].value.data))
+			repopulateRolesTableWith([htmlTableFromRoles(results[0].value.data, results[1].value.data)])
 		})
 		.catch( errors => console.log(errors) )
 	}
 
 	//Start doing actual things:
 	repopulateDomCheckboxesLoading()
+	repopulateRolesTableWith([htmlTableForLoading()])
 	refreshPermissionsAndRoles()
 
 </script>
