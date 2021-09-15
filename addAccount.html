@@ -28,16 +28,9 @@
 		</table>
 	</div>
 </body>
+<script type="text/javascript" src="htmlTableFromRoles.js"></script>
 <script>
 	'use strict';
-
-	function retrieveAllPermissions(path, onload, onerror) {
-		let xhttp = new XMLHttpRequest()
-		xhttp.onload = onload
-		xhttp.onerror = onerror
-		xhttp.open("GET", path, true)
-		xhttp.send()
-	}
 
 	function removeAllChildNodes(parent) {
 	    while (parent.firstChild) {
@@ -90,135 +83,34 @@
 		}
 	}
 
-	function parseAllPermissionsForCheckboxes() {
-		try {
-			console.log(this.responseText)
-			let permissions = JSON.parse(this.responseText).data
-			repopulateDomCheckboxesWithRoles(permissions)
-			
-			let dummyRoles = {
-			  data: [
-			    {
-			      id: 1,
-			      name: "All Powerful",
-			      assigned_user_count: 3,
-			      permission_ids: [ 1, 2, 3, 4, 5, 6 ]
-			    },
-			    {
-			      id: 2,
-			      name: "Ghost",
-			      assigned_user_count: 42,
-			      permission_ids: [ 2, 3, 4, 5 ]
-			    },
-			    {
-			      id: 3,
-			      name: "Ed",
-			      assigned_user_count: 1,
-			      permission_ids: [ ]
-			    },
-			    {
-			      id: 4,
-			      name: "Duck",
-			      assigned_user_count: 10,
-			      permission_ids: [ 6 ]
-			    }
-			  ],
-			  meta: { }
-			}
-
-			let divTable = document.getElementById("existingRoles")
-			removeAllChildNodes(divTable)
-			divTable.appendChild(htmlTableFromRoles(dummyRoles.data, permissions))
-		} catch (err) {
-			console.log(err)
-			repopulateDomCheckboxesError()
-		}
-	}
-
-	function htmlTableDatafy(element) {
-		let td = document.createElement("td")
-		td.appendChild(element)
-		return td
-	}
-
 	function changePermissionIdsIntoPermissionNames(idNumber, permissions) {
 		let permission = permissions.find(y => y.id == idNumber)
 		return permission?.name
 	}
 
-	function htmlRoleNameFromRole(role, permissions) {
-		return document.createTextNode(role?.name ?? "(none)")
-	}
 
-	function htmlRoleUsageFromRole(role, permissions) {
-		return document.createTextNode("" + (role?.assigned_user_count ?? 0))
-	}
-
-	function htmlRolePermissionsFromRole(role, permissions) {
-		console.log(permissions)
-		let names = role.permission_ids.map(x => changePermissionIdsIntoPermissionNames(x, permissions) ?? `(invalid role_id ${x})`)
-		names = names?.length ? names : ["(none)"]
-
-		let htmlRoleNames = document.createTextNode(names.join("; "))
-		return htmlRoleNames
-	}
-
-	const TABLE_PARAMETERS =
-		[	{	name : "Role",
-				htmlFromRole : htmlRoleNameFromRole
-			}
-		,	{	name : "Users",
-				htmlFromRole : htmlRoleUsageFromRole
-			}
-		,	{	name : "Permissions",
-				htmlFromRole : htmlRolePermissionsFromRole 
-			}
-		]
-
-	function htmlTableRowElementsFromRole(role, permissions) {
-		return TABLE_PARAMETERS.map(x => x.htmlFromRole(role, permissions))
-	}
-
-	function htmlTableHeaderElements() {
-		return TABLE_PARAMETERS.map(x => document.createTextNode(x.name))
-	}
-
-	function htmlTableFromRoles(roles, permissions) {
-		let htmlTable = document.createElement("table")
-
-		let headerRow = htmlTable.createTHead().insertRow(0)
-		let headerRowElements = htmlTableHeaderElements()
-
-		headerRowElements.forEach( function (ele, idx) {
-			let th = document.createElement("th")
-			th.appendChild(ele)
-			headerRow.appendChild(th)
-		})
-
-		let tableBody = htmlTable.createTBody()
-		let rowsElements = roles.map(role => htmlTableRowElementsFromRole(role, permissions))
-		rowsElements.forEach( function(eles, row_idx) {
-			let row = tableBody.insertRow(row_idx)
-			eles.forEach( function (ele, ele_idx) {
-				let cell = row.insertCell(ele_idx)
-				cell.appendChild(ele)
-			})
-		})
-
-		return htmlTable
-	}
-
-	//Start doing actual things: 
 	repopulateDomCheckboxesLoading()
-	retrieveAllPermissions
-		( "/all_permissions.json"
-		, parseAllPermissionsForCheckboxes	//TODO:  Why can't I bind "this" here?
-		, repopulateDomCheckboxesError
-		)
 
+	//Start doing actual things:
+	let permissionsPromise = fetch("/permissions.json")
+	.then( response => response.json() )
+	.catch( err => console.log(err) )
 
+	let rolesPromise = fetch("/roles.json")
+	.then( response => response.json() )
+	.catch( err => console.log(err) )
 
+	let populateInputOnPromise = Promise.allSettled([permissionsPromise])
+	.then( results => repopulateDomCheckboxesWithRoles(results[0].value.data) )
+	.catch( errors => repopulateDomCheckboxesError() )
 
+	let populateTableOnPromise = Promise.allSettled([rolesPromise, permissionsPromise])
+	.then(function(results) {
+		let divTable = document.getElementById("existingRoles")
+		removeAllChildNodes(divTable)
+		divTable.appendChild(htmlTableFromRoles(results[0].value.data, results[1].value.data))
+	})
+	.catch( errors => console.log(errors) )
 
 
 

@@ -76,6 +76,8 @@ function adminServerDemux(req, res) {
 		serveAsJSON(res, PERMISSIONS)
 	} else if (req.url == "/roles.json") {
 		serveAsJSON(res, ROLES)
+	} else if (req.url == "/htmlTableFromRoles.js") {
+		serveJavaScript(res, "htmlTableFromRoles.js")
 	} else if (req.url == "/addAccount.html") {
 		serveAddAccountPage(res)
 	} else {
@@ -97,6 +99,14 @@ function serveAsJSON(res, jsonable) {
 	res.statusCode = 200
 	res.setHeader("Content-Type", "application/json")
 	res.end(JSON.stringify(jsonable))
+}
+
+function serveJavaScript(res, path) {
+	const stream = fs.createReadStream("./" + path)
+
+	res.statusCode = 200
+	res.setHeader("Content-Type", "text/javascript")
+	stream.pipe(res)
 }
 
 function serveAddAccountPage(res) {
