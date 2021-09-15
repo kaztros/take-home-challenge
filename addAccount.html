@@ -48,15 +48,15 @@
 	function refreshPermissionsAndRoles() {
 		let permissionsPromise = fetch("/permissions.json")
 		.then( response => response.json() )
-		.catch( err => repopulateDomCheckboxesError("aw beans: " + err.toString()) )
+		.catch( err => repopulateFormCheckboxesWith(htmlsFormFromError("aw beans: " + err.toString())) )
 
 		let rolesPromise = fetch("/roles.json")
 		.then( response => response.json() )
 		.catch( err => console.log(err) )
 
 		let populateInputOnPromise = Promise.allSettled([permissionsPromise])
-		.then( results => repopulateDomCheckboxesWithRoles(results[0].value.data) )
-		.catch( err => repopulateDomCheckboxesError("aw beans: " + err.toString()) )
+		.then( results => repopulateFormCheckboxesWith(htmlsFormFromPermissions(results[0].value.data)) )
+		.catch( err => repopulateFormCheckboxesWith(htmlsFormFromError("aw beans: " + err.toString())) )
 
 		let populateTableOnPromise = Promise.allSettled([rolesPromise, permissionsPromise])
 		.then(function(results) {
@@ -66,7 +66,7 @@
 	}
 
 	//Start doing actual things:
-	repopulateDomCheckboxesLoading()
+	repopulateFormCheckboxesWith(htmlsFormFromLoading())
 	repopulateRolesTableWith([htmlTableForLoading()])
 	refreshPermissionsAndRoles()
 

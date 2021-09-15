@@ -1,17 +1,15 @@
 "use strict";
 
-function repopulateDomCheckboxesLoading() {
-	let loadingElements = [document.createTextNode("(loading...)")]
-	repopulateFormCheckboxesWith(loadingElements)
+function htmlsFormFromLoading() {
+	return [document.createTextNode("(loading...)")]
 }
 
-function repopulateDomCheckboxesError(errorString) {
+function htmlsFormFromError(errorString) {
 	errorString = errorString ?? "aw beans.  Something bad happened."
-	let errorElements = [document.createTextNode(errorString)]
-	repopulateFormCheckboxesWith(errorElements)
+	return [document.createTextNode(errorString)]
 }
 
-function createCheckboxHtmlElementsFromRoleName(name) {
+function htmlsCheckboxFromRoleName(name) {
 	//Not whitespace friendly.
 	let checkbox = document.createElement("input")
 	let label = document.createElement("label")
@@ -28,13 +26,13 @@ function createCheckboxHtmlElementsFromRoleName(name) {
 	return [checkbox, label]
 }
 
-function repopulateDomCheckboxesWithRoles(all_roles) {
-	let arrayOfElements = all_roles.map(function(role) { 
-		let elements = createCheckboxHtmlElementsFromRoleName(role.name) 
+function htmlsFormFromPermissions(permissions) {
+	let arrayOfElements = permissions.map(function(permission) { 
+		let elements = htmlsCheckboxFromRoleName(permission.name) 
 		elements = elements.concat([document.createElement("br")])
 		return elements
 	})
 
-	repopulateFormCheckboxesWith(arrayOfElements.flat())
+	return arrayOfElements.flat()
 }
 
