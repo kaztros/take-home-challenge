@@ -21,7 +21,7 @@ function htmlRoleUsageFromRole(role, permissions) {
 }
 
 function htmlRolePermissionsFromRole(role, permissions) {
-	let names = role.permission_ids.map(x => changePermissionIdsIntoPermissionNames(x, permissions) ?? `(invalid role_id ${x})`)
+	let names = role.permission_ids.map(x => permissionNameFromPermissionId(x, permissions) ?? `(invalid role_id ${x})`)
 	names = names?.length ? names : ["(none)"]
 
 	let htmlRoleNames = document.createTextNode(names.join("; "))

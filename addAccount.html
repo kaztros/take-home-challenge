@@ -12,6 +12,7 @@
 		<form>
 			<div id="rolePermissionsInput">
 			</div>
+			<button type="button" onclick="addNewRole()" id="roleAddNewButton">Add new role</button>
 		</form>
 	</div>
 	<div id="existingRoles">
@@ -21,6 +22,11 @@
 <script type="text/javascript" src="htmlFormFromRoles.js"></script>
 <script>
 	'use strict';
+
+	var ThePermissions
+	//^ Need a global because event-listener functions:
+	//	- need to map permission's (id <-> name)
+	//  - (That's literally the only reason.)
 
 	function removeAllChildNodes(parent) {
 	    while (parent.firstChild) {
@@ -40,8 +46,13 @@
 		domNodes.forEach(x => divTable.appendChild(x))
 	}
 
-	function changePermissionIdsIntoPermissionNames(idNumber, permissions) {
+	function permissionNameFromPermissionId(idNumber, permissions) {
 		let permission = permissions.find(y => y.id == idNumber)
+		return permission?.name
+	}
+
+	function permissionIdFromPermissionName(name, permissions) {
+		let permission = permissions.find(y => y.name == name)
 		return permission?.name
 	}
 
@@ -55,21 +66,58 @@
 		.catch( err => console.log(err) )
 
 		let populateInputOnPromise = Promise.allSettled([permissionsPromise])
-		.then( results => htmlsFormFromPermissions(results[0].value.data) )
+		.then( function(results) { 
+			ThePermissions = results[0].value.data
+			return htmlsFormFromPermissions(results[0].value.data)
+		})
 		.catch( err => htmlsFormFromError("aw beans: " + err.toString()) )
 		.then( htmls => repopulateFormCheckboxesWith(htmls) )
 
 		let populateTableOnPromise = Promise.allSettled([rolesPromise, permissionsPromise])
-		.then(function([results]) {
-			repopulateRolesTableWith([htmlTableFromRoles(results[0].value.data, results[1].value.data)])
+		.then(function([rolesIsh, permissionsIsh]) {
+			repopulateRolesTableWith([htmlTableFromRoles(rolesIsh.value.data, permissionsIsh.value.data)])
 		})
 		.catch( errors => console.log(errors) )
+	}
+
+	function addNewRole() {
+		let button = document.getElementById("roleAddNewButton")
+		button.disabled = true
+
+		//Create a representation:
+		let role = {
+			name: document.getElementById("roleNameInput").value,
+			permissionNames: []
+		}
+
+		let checkboxesDiv = document.getElementById("rolePermissionsInput")
+		let activeCheckboxElements = []
+
+		for (let idx = 0; idx < checkboxesDiv.children.length; idx++) {
+			let element = checkboxesDiv.children[idx]
+			if (element.tagName == "INPUT" && (element.checked ?? false) == true) {
+				activeCheckboxElements = activeCheckboxElements.concat([element])
+			}
+		}
+
+		role.permissionNames = activeCheckboxElements.map(x => x.id.replace("checkbox_", ""))
+
+		console.log(role)
+
+		//TODO: Submit JSON.stringify(role) by POST to server.
+		//TOOD: Server-side conversion of permission to id (blech).
+		//TODO: Server-side modification.
+		//TODO: Server-side validation.
+
+		button.disabled = false
 	}
 
 	//Start doing actual things:
 	repopulateFormCheckboxesWith(htmlsFormFromLoading())
 	repopulateRolesTableWith([htmlTableForLoading()])
 	refreshPermissionsAndRoles()
+
+
 
 </script>
 <footer></footer>
