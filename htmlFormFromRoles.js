@@ -28,7 +28,6 @@ function createCheckboxHtmlElementsFromRoleName(name) {
 	return [checkbox, label]
 }
 
-
 function repopulateDomCheckboxesWithRoles(all_roles) {
 	let arrayOfElements = all_roles.map(function(role) { 
 		let elements = createCheckboxHtmlElementsFromRoleName(role.name) 
