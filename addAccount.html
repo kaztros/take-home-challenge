@@ -53,7 +53,7 @@
 
 	function permissionIdFromPermissionName(name, permissions) {
 		let permission = permissions.find(y => y.name == name)
-		return permission?.name
+		return permission?.id
 	}
 
 	function refreshPermissionsAndRoles() {
@@ -87,7 +87,7 @@
 		//Create a representation:
 		let role = {
 			name: document.getElementById("roleNameInput").value,
-			permissionNames: []
+			permission_names: []
 		}
 
 		let checkboxesDiv = document.getElementById("rolePermissionsInput")
@@ -100,24 +100,45 @@
 			}
 		}
 
-		role.permissionNames = activeCheckboxElements.map(x => x.id.replace("checkbox_", ""))
-
+		role.permission_names = activeCheckboxElements.map(x => x.id.replace("checkbox_", ""))
+		//^ I don't like C-style enumerations, but I also want to adhere to the API-style presented to me.
+		//  So role gets a bonus property that trades size-efficiency for coherency warranty.
+		role.permission_ids = role.permission_names.map(x => permissionIdFromPermissionName(x, ThePermissions))
 		console.log(role)
 
-		//TODO: Submit JSON.stringify(role) by POST to server.
-		//TOOD: Server-side conversion of permission to id (blech).
-		//TODO: Server-side modification.
-		//TODO: Server-side validation.
-
-		button.disabled = false
+		fetch('/addNewRole.json', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(role),
+		})
+		.then( response => response.json() )
+		.then( successOrError => {
+			console.log(successOrError)
+			if (successOrError.success) {
+				//yay
+			} else {
+				throw successOrError?.error ?? "Unexpected object format."
+			}
+		})
+		.catch( error => { console.log(error) } )
+		.finally(
+			softReload()
+			//button.disabled = false <- implicit in softReload
+		)
 	}
 
 	//Start doing actual things:
-	repopulateFormCheckboxesWith(htmlsFormFromLoading())
-	repopulateRolesTableWith([htmlTableForLoading()])
-	refreshPermissionsAndRoles()
 
+	function softReload() {
+		repopulateFormCheckboxesWith(htmlsFormFromLoading())
+		repopulateRolesTableWith([htmlTableForLoading()])
+		refreshPermissionsAndRoles()
+		document.getElementById("roleAddNewButton").disabled = false
+	}
 
+	softReload()
 
 </script>
 <footer></footer>
