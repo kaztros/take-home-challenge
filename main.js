@@ -2,6 +2,15 @@
 
 const fs = require("fs")
 
+function constrainProperties(defaultObj, obj) {
+	let constraintProperties = Reflect.ownKeys(defaultObj)
+	let result = {}
+	constraintProperties.forEach(property => {
+		Reflect.set(result, property, Reflect.get(obj, property) ?? Reflect.get(defaultObj, property))
+	})
+	return result
+}
+
 const PERMISSIONS = {
   data: [
     {
@@ -30,6 +39,13 @@ const PERMISSIONS = {
     }
   ],
   meta: {}
+}
+
+const TheNullRole = {
+	id: -1,
+	name: "(none)",
+	assigned_user_count: 0,
+	permission_ids: []
 }
 
 var ROLES = {
@@ -62,6 +78,10 @@ var ROLES = {
   meta: { }
 }
 
+function nextId(roles) {
+	let currentIds = roles.map(x => x.id)
+	return Math.max(0, Math.max(...currentIds)) + 1
+}
 
 function main_ish() {
 	const http = require('http')
@@ -82,6 +102,8 @@ function adminServerDemux(req, res) {
 		serveJavaScript(res, "htmlFormFromRoles.js")
 	} else if (req.url == "/addAccount.html") {
 		serveAddAccountPage(res)
+	} else if (req.url == "/addNewRole.json") {
+		recieveAddNewRole(req, res)
 	} else {
 		buildPageNotFound(req, res)
 	}
@@ -119,8 +141,44 @@ function serveAddAccountPage(res) {
 	stream.pipe(res)
 }
 
-function buildMenuCreate(req, res) {
-	res.end()
+async function recieveAddNewRole(req, res) {
+	res.statusCode = 200
+	res.setHeader("Content-Type", "application/json")
+
+	let returnVal = { success: true,
+		error: null
+	}
+
+	const buffers = [];
+
+	for await (const chunk of req) {
+		buffers.push(chunk)
+	}
+
+	try {
+		let partialRole = JSON.parse(Buffer.concat(buffers).toString())
+		console.log(partialRole)
+		partialRole.id = nextId(ROLES.data)
+		partialRole.assigned_user_count = 0
+
+		let sanitizedRole = constrainProperties(TheNullRole, partialRole)
+		ROLES.data.push(sanitizedRole)
+		console.log(sanitizedRole)
+
+	} catch (err) {
+		console.log("error: ", err)
+		returnVal.success = false
+		returnVal.error = err
+
+		res.statusCode = 500
+	} finally {
+		res.end(JSON.stringify(returnVal))
+	}
+
+	//TOOD: Server-side conversion of permission to id (blech).
+	//TODO: Server-side modification.
+	//TODO: Server-side validation.
+
 }
 
 main_ish();
